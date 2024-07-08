@@ -108,7 +108,20 @@ class CocoDataset(Dataset):
         ann_ids = coco.getAnnIds(imgIds=img_id)
         target = coco.loadAnns(ann_ids)
 
+        file_name = coco.loadImgs(img_id)[0]['file_name']
+
         # file_name = coco.loadImgs(img_id)[0]['file_name']
+
+        # if self.data_format == 'zip':
+        #     img = zipreader.imread(
+        #         self._get_image_path(file_name),
+        #         cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION
+        #     )
+        # else:
+        #     img = cv2.imread(
+        #         self._get_image_path(file_name),
+        #         cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION
+        #     )
 
         img_url = coco.dataset['images'][index]['coco_url']
         response = requests.get(img_url)
