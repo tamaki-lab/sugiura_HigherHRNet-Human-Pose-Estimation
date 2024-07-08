@@ -22,6 +22,9 @@ from torch.utils.data import Dataset
 
 from pycocotools.cocoeval import COCOeval
 from utils import zipreader
+from PIL import Image
+from io import BytesIO
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +82,6 @@ class CocoDataset(Dataset):
         else:
             return os.path.join(
                 self.root,
-                'annotations',
                 'person_keypoints_{}.json'.format(
                     self.dataset
                 )
@@ -106,20 +108,12 @@ class CocoDataset(Dataset):
         ann_ids = coco.getAnnIds(imgIds=img_id)
         target = coco.loadAnns(ann_ids)
 
-        file_name = coco.loadImgs(img_id)[0]['file_name']
+        # file_name = coco.loadImgs(img_id)[0]['file_name']
 
-        if self.data_format == 'zip':
-            img = zipreader.imread(
-                self._get_image_path(file_name),
-                cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION
-            )
-        else:
-            img = cv2.imread(
-                self._get_image_path(file_name),
-                cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION
-            )
-
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_url = coco.dataset['images'][index]['coco_url']
+        response = requests.get(img_url)
+        img = Image.open(BytesIO(response.content)).convert('RGB')
+        img = np.array(img)
 
         if self.transform is not None:
             img = self.transform(img)
@@ -163,9 +157,9 @@ class CocoDataset(Dataset):
         :param cfg: cfg dictionary
         :param preds: prediction
         :param output_dir: output directory
-        :param args: 
-        :param kwargs: 
-        :return: 
+        :param args:
+        :param kwargs:
+        :return:
         '''
         res_folder = os.path.join(output_dir, 'results')
         if not os.path.exists(res_folder):
